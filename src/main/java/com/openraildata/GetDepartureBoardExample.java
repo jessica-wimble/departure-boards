@@ -39,7 +39,7 @@ public class GetDepartureBoardExample {
 
         RailInfoAccessor railInfoAccessor = new RailInfoAccessor();
 
-        List<ServiceInfo> services = railInfoAccessor.getNextServices("BMS");
+        List<ServiceInfo> services = railInfoAccessor.getNextServices("MAN");
 
         for(ServiceInfo serviceInfo:services){
 
