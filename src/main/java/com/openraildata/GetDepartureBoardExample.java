@@ -34,65 +34,26 @@ import java.util.List;
  */
 public class GetDepartureBoardExample {
 
-    private static final Logger logger = LoggerFactory.getLogger(GetDepartureBoardExample.class);
-
-    private static final String LDB_TOKEN = "22f9c534-2a6f-44cf-8612-5cf7eb958e6c";
-    private static final boolean DEBUG = false;
 
     public static void main(String[] args) throws ConfigurationException {
 
-        if (LDB_TOKEN.isEmpty()) {
-            throw new ConfigurationException("Please configure your OpenLDBWS token in GetDepartureBoardExample!");
-        }
+        RailInfoAccessor railInfoAccessor = new RailInfoAccessor();
 
-        var accessToken = new AccessToken();
-        accessToken.setTokenValue(LDB_TOKEN);
+        List<ServiceInfo> services = railInfoAccessor.getNextServices("BMS");
 
-        var soap = new Ldb();
-        var soapService = soap.getLDBServiceSoap12();
+        for(ServiceInfo serviceInfo:services){
 
-        /*
-         * To examine the request and responses sent to the service, set DEBUG to true above
-         */
-        if (DEBUG) {
-            var client = ClientProxy.getClient(soapService);
-            client.getInInterceptors().add(new LoggingInInterceptor());
-            client.getOutInterceptors().add(new LoggingOutInterceptor());
-        }
-
-        var params = new GetBoardRequestParams();
-        params.setCrs("HYS");
-
-        StationBoardResponseType departureBoard = soapService.getDepartureBoard(params, accessToken);
-
-        logger.info("Trains at {}", departureBoard.getGetStationBoardResult().getLocationName());
-        logger.info("===============================================================================");
-
-        List<ServiceItem> service = departureBoard.getGetStationBoardResult().getTrainServices().getService();
-
-        for (ServiceItem si : service) {
-
-            logger.info("{} to {} - {}", si.getStd(), si.getDestination().getLocation().get(0).getLocationName(), si.getEtd());
-
-        }
-
-        GetServiceDetailsRequestParams serviceParams = new GetServiceDetailsRequestParams();
-        serviceParams.setServiceID(service.get(0).getServiceID());
-        ServiceDetailsResponseType serviceItem = soapService.getServiceDetails(serviceParams, accessToken);
-
-
-        ArrayOfArrayOfCallingPoints callingPoints = serviceItem.getGetServiceDetailsResult().getSubsequentCallingPoints();
-
-        List<ArrayOfCallingPoints> points = callingPoints.getCallingPointList();
-
-        logger.info("Sizwe: "+points.size());
-        for(ArrayOfCallingPoints point:points){
-            List<CallingPoint> call = point.getCallingPoint();
-            for(CallingPoint finalPoint:call){
-                logger.info(finalPoint.getLocationName()+" "+finalPoint.getEt());
+            System.out.println(serviceInfo.getDepartureTime() + " to "+ serviceInfo.getDestination() + " - " + serviceInfo.getStatus());
+            System.out.println("Calling at: ");
+            for(StationStop stationStop:serviceInfo.getStops()){
+                System.out.print(stationStop.getStationName() + " " + "("+ stationStop.getExpectedTime()+")" +", ");
             }
-
+            System.out.println("");
+            System.out.println("A "+ serviceInfo.getProvider() + " service");
+            System.out.println("----");
         }
+
+
 
 
 
